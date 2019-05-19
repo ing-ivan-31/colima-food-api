@@ -25,6 +25,7 @@ mongoose.connect('mongodb://mongodb')
 
 // Routes and Backend Functionalities
 var usersRoutes = require('./src/routes/Users');
+var testDB = require('./src/routes/db');
 
 // App Instance
 var app = express();
@@ -34,6 +35,7 @@ app.use(expressLogger);
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 app.use(basePath, usersRoutes);
+app.use("/testDB", testDB);
 
 // Execute App
 app.listen(port, () => {
