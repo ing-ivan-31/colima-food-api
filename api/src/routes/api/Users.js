@@ -1,48 +1,12 @@
 //Schema
 let express = require('express');
 let router = express.Router();
-const auth = require('../auth');
-const passport = require('passport');
+const authentication = require('../../services/authentication');
 const Users = require('../../models/User');
 const basePath = '';
 
-//Login
-router.post('/login',  auth.optional, (req, res, next) => {
-    const { body: { user } } = req;
-
-    if(!user.email) {
-        return res.status(422).json({
-            errors: {
-                email: 'is required',
-            },
-        });
-    }
-
-    if(!user.password) {
-        return res.status(422).json({
-            errors: {
-                password: 'is required',
-            },
-        });
-    }
-
-    return passport.authenticate('local', { session: false }, (err, passportUser, info) => {
-        if(err) {
-            return next(err);
-        }
-
-        if(passportUser) {
-            const user = passportUser;
-            user.token = passportUser.generateJWT();
-
-            return res.json({ user: user.toAuthJSON() });
-        }
-        return res.status(401).send(info);
-    })(req, res, next);
-});
-
 // Create
-router.post(basePath, auth.optional, (req, res) => {
+router.post(basePath, authentication.optional, (req, res) => {
     const { body: { user } } = req;
 
     if (!user) {
@@ -77,7 +41,7 @@ router.post(basePath, auth.optional, (req, res) => {
 });
 
 // Update
-router.put(basePath, auth.required, (req, res) => {
+router.put(basePath, authentication.required, (req, res) => {
     const { payload: { id },  body: { user }  } = req;
 
     if (!id) {
@@ -96,7 +60,7 @@ router.put(basePath, auth.required, (req, res) => {
 });
 
 // Delete
-router.delete(basePath, auth.required,  (req, res) => {
+router.delete(basePath, authentication.required,  (req, res) => {
     const { payload: { id },  body: { user }  } = req;
 
     if (!id) {
@@ -114,7 +78,7 @@ router.delete(basePath, auth.required,  (req, res) => {
 
 
 // GEt ALL
-router.get('', auth.required, (req, res, next) => {
+router.get('', authentication.required, (req, res, next) => {
     const { payload: { id } } = req;
 
     return Users.find()
@@ -130,7 +94,7 @@ router.get('', auth.required, (req, res, next) => {
 });
 
 //GET current route (required, only authenticated users have access)
-router.get('/current', auth.required, (req, res, next) => {
+router.get('/current', authentication.required, (req, res, next) => {
     const { payload: { id } } = req;
 
     return Users.findById(id)
