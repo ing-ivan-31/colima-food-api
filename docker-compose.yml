@@ -3,6 +3,8 @@ version: '2.0'
 services:
   mongodb:
     image: "mongo"
+    volumes:
+      - data-volume:/data/db
     ports:
       - "27018:27018"
   api:
@@ -16,3 +18,5 @@ services:
       - "6200:6200"
     depends_on:
       - mongodb
+volumes:
+  data-volume:
