@@ -9,6 +9,7 @@ let logger = pino({ level: process.env.LOG_LEVEL || 'info' });
 let expressLogger = expressPino({ logger });
 let session = require('express-session');
 let mongoose = require('mongoose');
+require('dotenv').config();
 
 //server configuration
 const port = process.env.PORT || 6200;
@@ -21,12 +22,12 @@ app.use(expressLogger);
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 app.use(express.static('public'));
-app.use(session({ secret: 'passport-tutorial', cookie: { maxAge: 60000 }, resave: false, saveUninitialized: false }));
+app.use(session({ secret: 'colima-food-api', cookie: { maxAge: 60000 }, resave: false, saveUninitialized: false }));
 
 
 //Configure Mongoose to promises and connect to DB.
 mongoose.promise = global.Promise;
-mongoose.connect('mongodb://mongodb:27017/colima-food-api', { useNewUrlParser: true } );
+mongoose.connect('mongodb://mongodb:27017/' + process.env.DB_NAME, { useNewUrlParser: true } );
 mongoose.set('debug', true);
 
 //Passport
@@ -36,13 +37,15 @@ app.use(require('./src/routes'));
 
 // 404 Handler
 app.use((req, res, next) => {
-    res.status(404).send('The route does not exist');
+    //res.status(404).send('The route does not exist');
+    res.status(404).sendFile(path.join(__dirname, 'public/404.html'))
 });
 
 // 500 handler
 app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.sendFile(path.join(__dirname, 'public/500.html'))
+    console.log(err.stack);
+    let statusError = err.status || 500;
+    res.status(statusError).sendFile(path.join(__dirname, 'public/500.html'))
 });
 
 // Execute App

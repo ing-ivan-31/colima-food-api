@@ -10,7 +10,9 @@ router.post(basePath, authentication.optional, (req, res) => {
     const { body: { user } } = req;
 
     if (!user) {
-        return res.status(400).send('Bad request - Empty body');
+        return res.status(400).json({
+            errors: 'Bad request -Empty Body'
+        });
     }
 
     if(!user.email) {
@@ -35,7 +37,7 @@ router.post(basePath, authentication.optional, (req, res) => {
     return model.save()
         .then(() => res.status(201).json({ user: model.toAuthJSON()}))
         .catch( error => {
-            console.log(error)
+            console.log(error);
             return res.status(500).json(error)
         });
 });
