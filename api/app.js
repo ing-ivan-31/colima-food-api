@@ -45,7 +45,13 @@ app.use((req, res, next) => {
 app.use((err, req, res, next) => {
     console.log(err.stack);
     let statusError = err.status || 500;
-    res.status(statusError).sendFile(path.join(__dirname, 'public/500.html'))
+    let objError = {
+        name: err.name,
+        message: err.message,
+        code: err.code,
+        status: err.status
+    };
+    res.status(statusError).json( { error:objError } )
 });
 
 // Execute App

@@ -49,6 +49,13 @@ docker-compose up
 
 **For the following requests you need set up the HEADER for get the data.**
 
-`Authorization: Token eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImZvcnJvc0BnbWFpbC5jb20iLCJpZCI6IjVjZWIxNGNmZmExZGZmMDE5ZjAxODFmNiIsImV4cCI6MTU2NDA5NDI0MywiaWF0IjoxNTU4OTEwMjQzfQ.lIyHj-x1PUb2_Os84xfAm3vTpLM7KBZ0PZPUOBk4zWc`
+`Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImZvcnJvc0BnbWFpbC5jb20iLCJpZCI6IjVjZWIxNGNmZmExZGZmMDE5ZjAxODFmNiIsImV4cCI6MTU2NDA5NDI0MywiaWF0IjoxNTU4OTEwMjQzfQ.lIyHj-x1PUb2_Os84xfAm3vTpLM7KBZ0PZPUOBk4zWc`
 
+**Standard Success Json Responses**
 
+{
+    "users": {
+    }
+}
+
+**Standard Failure Json Responses**
