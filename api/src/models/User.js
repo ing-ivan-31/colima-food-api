@@ -49,13 +49,20 @@ UsersSchema.methods.generateJWT = function() {
 };
 
 UsersSchema.methods.toAuthJSON = function() {
+
+    let fullname = 'Usuario';
+    if (typeof  this.first_name !== 'undefined' && typeof  this.last_name !== 'undefined') {
+        fullname = this.first_name + ' ' + this.last_name;
+    }
+
     return {
         _id: this._id,
         email: this.email,
         token: this.generateJWT(),
         first_name: this.first_name,
         last_name: this.last_name,
-        phone_number: this.phone_number
+        phone_number: this.phone_number,
+        full_name: fullname
     };
 };
 

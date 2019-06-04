@@ -43,7 +43,7 @@ router.post(basePath, authentication.required, (req, res) => {
         .catch( error => {
             const status = {status: httpStatus.INTERNAL_SERVER_ERROR};
             const objError = {...error, ...status};
-            return res.status(httpStatus.INTERNAL_SERVER_ERROR).json( { error: objError } );
+            return res.status(httpStatus.INTERNAL_SERVER_ERROR).json(objError);
         });
 });
 
@@ -69,7 +69,7 @@ router.put(basePath, authentication.required, (req, res) => {
         .catch( error => {
             const status = {status: httpStatus.INTERNAL_SERVER_ERROR};
             const objError = {...error, ...status};
-            return res.status(httpStatus.INTERNAL_SERVER_ERROR).json( { error: objError } );
+            return res.status(httpStatus.INTERNAL_SERVER_ERROR).json(objError);
         });
 });
 
@@ -93,7 +93,7 @@ router.delete(basePath, authentication.required,  (req, res) => {
         .catch( error => {
             const status = {status: httpStatus.INTERNAL_SERVER_ERROR};
             const objError = {...error, ...status};
-            return res.status(httpStatus.INTERNAL_SERVER_ERROR).json( { error: objError } );
+            return res.status(httpStatus.INTERNAL_SERVER_ERROR).json(objError);
         });
 });
 
@@ -115,7 +115,7 @@ router.get(basePath, authentication.required, (req, res, next) => {
         .catch( error => {
             const status = {status: httpStatus.INTERNAL_SERVER_ERROR};
             const objError = {...error, ...status};
-            return res.status(httpStatus.INTERNAL_SERVER_ERROR).json( { error: objError });
+            return res.status(httpStatus.INTERNAL_SERVER_ERROR).json(objError);
         });
 });
 
@@ -131,7 +131,13 @@ router.get('/current', authentication.required, (req, res, next) => {
                     status: httpStatus.BAD_REQUEST
                 });
             }
-            return res.json({user: user });
+
+            let fullname = {};
+            if (typeof  user.first_name !== 'undefined' && typeof  user.last_name !== 'undefined') {
+                fullname = {full_name: user.first_name + ' ' + user.last_name};
+            }
+            const newUSer = {...user._doc, ...fullname};
+            return res.json( {user: newUSer } );
         })
         .catch( error => {
             const status = {status: httpStatus.INTERNAL_SERVER_ERROR};
@@ -159,7 +165,7 @@ router.get('/:id', authentication.required, (req, res, next) => {
         .catch( error => {
             const status = {status: httpStatus.INTERNAL_SERVER_ERROR};
             const objError = {...error, ...status};
-            return res.status(httpStatus.INTERNAL_SERVER_ERROR).json( { error: objError });
+            return res.status(httpStatus.INTERNAL_SERVER_ERROR).json( objError );
         });
 });
 
