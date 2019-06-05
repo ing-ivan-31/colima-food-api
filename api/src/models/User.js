@@ -50,14 +50,14 @@ UsersSchema.methods.generateJWT = function() {
     }, process.env.JWT_SECRET);
 };
 
-const sendEmail = (email) => {
+const sendEmail = (email, token_confirmation) => {
     let mailer = new Mailer();
     mailer.setEmailOptions({
         from: '"Bienvenido a Colima food" <welcome@colimafood.com>',
         to: email,
         subject: 'Bienvenido a Colima food',
         text: 'Bienvenido a Colima food, Estamos emocionados en darte la bienvenida a partir de hoy solo da click en el link para terminar el proceso de activacion de cuenta. ',
-        html: '<b>Bienvenido a Colima food! </b><p>Estamos emocionados en darte la bienvenida a partir de hoy solo da click en el link para terminar el proceso de activacion de cuenta <br> <a href="' + process.env.CLIENT_APP_HOST + '/active/account">Activa tu Cuenta</a> <br/> </p>',
+        html: '<b>Bienvenido a Colima food! </b><p>Estamos emocionados en darte la bienvenida a partir de hoy solo da click en el link para terminar el proceso de activacion de cuenta <br> <a href="' + process.env.CLIENT_APP_HOST + '/active/account/' + token_confirmation + '">Activa tu Cuenta</a> <br/> </p>',
         attachments: []
     });
     mailer.send();
@@ -69,7 +69,7 @@ UsersSchema.methods.toAuthJSON = function() {
         fullname = this.first_name + ' ' + this.last_name;
     }
 
-    sendEmail(this.email);
+    sendEmail(this.email, this.token_confirmation);
 
     return {
         _id: this._id,
