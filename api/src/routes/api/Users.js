@@ -6,6 +6,18 @@ const Users = require('../../models/User');
 const httpStatus = require('../../constants/httpStatus');
 const basePath = '';
 
+/**
+ *
+ * @param user
+ */
+const getFullName = (user) => {
+    let fullname = {};
+    if (typeof  user.first_name !== 'undefined' && typeof  user.last_name !== 'undefined') {
+        fullname = {full_name: user.first_name + ' ' + user.last_name};
+    }
+    return fullname;
+};
+
 // Create
 router.post(basePath, authentication.optional, (req, res) => {
     const { body: { user } } = req;
@@ -134,14 +146,48 @@ router.get('/current', authentication.required, (req, res, next) => {
                 });
             }
 
-            let fullname = {};
-            if (typeof  user.first_name !== 'undefined' && typeof  user.last_name !== 'undefined') {
-                fullname = {full_name: user.first_name + ' ' + user.last_name};
-            }
+            let fullname = getFullName(user);
             const newUSer = {...user._doc, ...fullname};
             return res.json( {user: newUSer } );
         })
         .catch( error => {
+            const status = {status: httpStatus.INTERNAL_SERVER_ERROR};
+            const objError = {...error, ...status};
+            return res.status(httpStatus.INTERNAL_SERVER_ERROR).json(objError);
+        });
+});
+
+// Activate account
+router.post('/activate', authentication.optional, (req, res, next) => {
+    const { body: { user } } = req;
+
+    Users
+        .findOneAndUpdate(
+            {
+                token_confirmation: user.token_confirmation,
+                activated: 0
+            },
+            {
+                activated: 1
+            },
+            {
+                new: true,                       // return updated doc
+                //runValidators: true              // validate before update
+            })
+        .then((user) => {
+            if(!user) {
+                return res.status(httpStatus.UNPROCESSABLE_ENTITY).json({
+                    error: {message: 'Este usuario ha sido activado o no existe en nuestros registros'},
+                    status: httpStatus.UNPROCESSABLE_ENTITY
+                });
+            }
+
+            let fullname = getFullName(user);
+            const newUSer = {...user._doc, ...fullname};
+            return res.json( {user: newUSer } );
+        })
+        .catch( error => {
+            console.log(error);
             const status = {status: httpStatus.INTERNAL_SERVER_ERROR};
             const objError = {...error, ...status};
             return res.status(httpStatus.INTERNAL_SERVER_ERROR).json(objError);
