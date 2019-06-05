@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const { Schema } = mongoose;
+const Mailer = require("../services/mailer");
 
 const UsersSchema = new Schema({
     first_name: String,
@@ -28,6 +29,7 @@ const UsersSchema = new Schema({
 UsersSchema.methods.setPassword = function(password) {
     this.salt = crypto.randomBytes(16).toString('hex');
     this.hash = crypto.pbkdf2Sync(password, this.salt, 10000, 512, 'sha512').toString('hex');
+    this.token_confirmation = crypto.randomBytes(16).toString('hex');
 };
 
 UsersSchema.methods.validatePassword = function(password) {
@@ -45,15 +47,29 @@ UsersSchema.methods.generateJWT = function() {
         email: this.email,
         id: this._id,
         exp: parseInt(expirationDate.getTime() / 1000, 10),
-    }, 'secret');
+    }, process.env.JWT_SECRET);
+};
+
+const sendEmail = (email) => {
+    let mailer = new Mailer();
+    mailer.setEmailOptions({
+        from: '"Bienvenido a Colima food" <welcome@colimafood.com>',
+        to: email,
+        subject: 'Bienvenido a Colima food',
+        text: 'Bienvenido a Colima food, Estamos emocionados en darte la bienvenida a partir de hoy solo da click en el link para terminar el proceso de activacion de cuenta. ',
+        html: '<b>Bienvenido a Colima food! </b><p>Estamos emocionados en darte la bienvenida a partir de hoy solo da click en el link para terminar el proceso de activacion de cuenta <br> <a href="' + process.env.CLIENT_APP_HOST + '/active/account">Activa tu Cuenta</a> <br/> </p>',
+        attachments: []
+    });
+    mailer.send();
 };
 
 UsersSchema.methods.toAuthJSON = function() {
-
     let fullname = 'Usuario';
     if (typeof  this.first_name !== 'undefined' && typeof  this.last_name !== 'undefined') {
         fullname = this.first_name + ' ' + this.last_name;
     }
+
+    sendEmail(this.email);
 
     return {
         _id: this._id,

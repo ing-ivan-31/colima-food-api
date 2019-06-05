@@ -1,13 +1,13 @@
 //Schema
-let express = require('express');
-let router = express.Router();
+const express = require('express');
+const router = express.Router();
 const authentication = require('../../services/authentication');
 const Users = require('../../models/User');
-let httpStatus = require('../../constants/httpStatus');
+const httpStatus = require('../../constants/httpStatus');
 const basePath = '';
 
 // Create
-router.post(basePath, authentication.required, (req, res) => {
+router.post(basePath, authentication.optional, (req, res) => {
     const { body: { user } } = req;
 
     if (!user) {
@@ -39,7 +39,9 @@ router.post(basePath, authentication.required, (req, res) => {
     model.setPassword(user.password);
 
     return model.save()
-        .then(() => res.status(httpStatus.CREATED).json({user: model.toAuthJSON()}))
+        .then(() => {
+            res.status(httpStatus.CREATED).json({user: model.toAuthJSON()})
+        })
         .catch( error => {
             const status = {status: httpStatus.INTERNAL_SERVER_ERROR};
             const objError = {...error, ...status};
@@ -145,7 +147,6 @@ router.get('/current', authentication.required, (req, res, next) => {
             return res.status(httpStatus.INTERNAL_SERVER_ERROR).json(objError);
         });
 });
-
 
 //Get by Id
 router.get('/:id', authentication.required, (req, res, next) => {
