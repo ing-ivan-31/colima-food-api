@@ -8,12 +8,14 @@ passport.use(new LocalStrategy({
 }, (email, password, done) => {
     Users.findOne(
         {
-            email: email,
-            activated: 1
+            email: email
         })
         .then((user) => {
             if(!user || !user.validatePassword(password)) {
                 return done(null, false, {  message : 'Tus credenciales estan incorrectas.' });
+            }
+            if (user.activated == false) {
+                return done(null, false, {  message : 'Tu cuenta no ha sido activada.' });
             }
 
             return done(null, user);

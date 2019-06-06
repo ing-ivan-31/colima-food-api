@@ -23,6 +23,7 @@ const UsersSchema = new Schema({
         default: 0
     },
     token_confirmation: String,
+    token_reset: String,
 
 }, { timestamps:true });
 
@@ -30,6 +31,24 @@ UsersSchema.methods.setPassword = function(password) {
     this.salt = crypto.randomBytes(16).toString('hex');
     this.hash = crypto.pbkdf2Sync(password, this.salt, 10000, 512, 'sha512').toString('hex');
     this.token_confirmation = crypto.randomBytes(16).toString('hex');
+};
+
+UsersSchema.methods.changePassword = function(token, password) {
+    let salt = crypto.randomBytes(16).toString('hex');
+    let hash = crypto.pbkdf2Sync(password, salt, 10000, 512, 'sha512').toString('hex');
+
+    return this.model('Users').findOneAndUpdate({
+            token_reset: token,
+        },
+        {
+            token_reset: '',
+            salt: salt,
+            hash: hash,
+            activated: 1
+        },
+        {
+            new: true, // return updated doc
+        });
 };
 
 UsersSchema.methods.validatePassword = function(password) {
@@ -57,19 +76,21 @@ const sendEmail = (email, token_confirmation) => {
         to: email,
         subject: 'Bienvenido a Colima food',
         text: 'Bienvenido a Colima food, Estamos emocionados en darte la bienvenida a partir de hoy solo da click en el link para terminar el proceso de activacion de cuenta. ',
-        html: '<b>Bienvenido a Colima food! </b><p>Estamos emocionados en darte la bienvenida a partir de hoy solo da click en el link para terminar el proceso de activacion de cuenta <br> <a href="' + process.env.CLIENT_APP_HOST + '/active/account/' + token_confirmation + '">Activa tu Cuenta</a> <br/> </p>',
+        html: '<b>Bienvenido a Colima food! </b><p>Estamos emocionados en darte la bienvenida a partir de hoy solo da click en el link para terminar el proceso de activacion de cuenta <br> <a href="' + process.env.CLIENT_APP_HOST + '/account/active/' + token_confirmation + '">Activa tu Cuenta</a> <br/> </p>',
         attachments: []
     });
     mailer.send();
 };
 
-UsersSchema.methods.toAuthJSON = function() {
+UsersSchema.methods.toAuthJSON = function(create) {
     let fullname = 'Usuario';
     if (typeof  this.first_name !== 'undefined' && typeof  this.last_name !== 'undefined') {
         fullname = this.first_name + ' ' + this.last_name;
     }
 
-    sendEmail(this.email, this.token_confirmation);
+    if (create) {
+        sendEmail(this.email, this.token_confirmation);
+    }
 
     return {
         _id: this._id,

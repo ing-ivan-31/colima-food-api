@@ -27,7 +27,7 @@ app.use(session({ secret: 'colima-food-api', cookie: { maxAge: 60000 }, resave: 
 
 //Configure Mongoose to promises and connect to DB.
 mongoose.promise = global.Promise;
-mongoose.connect('mongodb://mongodb:27017/' + process.env.DB_NAME, { useNewUrlParser: true } );
+mongoose.connect('mongodb://mongodb:27017/' + process.env.DB_NAME, { useNewUrlParser: true,  useFindAndModify: false } );
 mongoose.set('debug', true);
 
 //Passport
