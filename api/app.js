@@ -1,44 +1,61 @@
 //Libraries
-var express = require('express');
-var mongoose = require('mongoose');
-var bodyParser = require('body-parser');
-var cors = require('cors');
-const pino = require('pino');
-const expressPino = require('express-pino-logger');
-
-const logger = pino({ level: process.env.LOG_LEVEL || 'info' });
-const expressLogger = expressPino({ logger });
+let express = require('express');
+let path = require('path');
+let bodyParser = require('body-parser');
+let cors = require('cors');
+let pino = require('pino');
+let expressPino = require('express-pino-logger');
+let logger = pino({ level: process.env.LOG_LEVEL || 'info' });
+let expressLogger = expressPino({ logger });
+let session = require('express-session');
+let mongoose = require('mongoose');
+require('dotenv').config();
 
 //server configuration
-var basePath = '/users';
-var port = 6200;
-
-// Connection to DB
-mongoose.connect('mongodb://mongodb')
-    .then(() => {
-        console.log('Backend Started');
-    })
-    .catch(err => {
-        console.error('Backend error:', err.stack);
-        process.exit(1);
-    });
-
-// Routes and Backend Functionalities
-var usersRoutes = require('./src/routes/Users');
-var testDB = require('./src/routes/db');
+const port = process.env.PORT || 6200;
 
 // App Instance
-var app = express();
+let app = express();
 app.use(express.static('public'));
 app.use(cors());
 app.use(expressLogger);
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
-app.use(basePath, usersRoutes);
-app.use("/testDB", testDB);
+app.use(express.static('public'));
+app.use(session({ secret: 'colima-food-api', cookie: { maxAge: 60000 }, resave: false, saveUninitialized: false }));
+
+
+//Configure Mongoose to promises and connect to DB.
+mongoose.promise = global.Promise;
+mongoose.connect('mongodb://mongodb:27017/' + process.env.DB_NAME, { useNewUrlParser: true,  useFindAndModify: false } );
+mongoose.set('debug', true);
+
+//Passport
+require('./src/config/passport');
+//Routes
+app.use(require('./src/routes'));
+
+// 404 Handler
+app.use((req, res, next) => {
+    //res.status(404).send('The route does not exist');
+    res.status(404).sendFile(path.join(__dirname, 'public/404.html'))
+});
+
+// 500 handler
+app.use((err, req, res, next) => {
+    console.log(err.stack);
+    let statusError = err.status || 500;
+    let objError = {
+        name: err.name,
+        message: err.message,
+        code: err.code,
+        status: err.status
+    };
+    res.status(statusError).json( { error:objError } )
+});
 
 // Execute App
 app.listen(port, () => {
-    console.log('TodoList Backend running on Port: ',port);
+    console.log('Backend running on Port: ',port);
     logger.info('Server running on port %d', port);
 });
