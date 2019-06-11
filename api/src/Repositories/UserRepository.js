@@ -1,4 +1,5 @@
 const Users = require('../models/User');
+const crypto = require('crypto');
 
 class UserRepository
 {
