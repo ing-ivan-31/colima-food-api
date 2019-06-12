@@ -24,7 +24,7 @@ const UsersSchema = new Schema({
     },
     token_confirmation: String,
     token_reset: String,
-
+    avatar: { type: String, default: process.env.S3_AVATAR_PROFILE_DEFAULT}
 }, { timestamps:true });
 
 UsersSchema.methods.setPassword = function(password) {

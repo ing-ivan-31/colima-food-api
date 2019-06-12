@@ -30,7 +30,7 @@ class UserRepository
      */
     update(id, user)
     {
-        return Users.findByIdAndUpdate(id, user,{
+        return Users.findByIdAndUpdate(id, {$set: user} , {
             new: true
         });
     }

@@ -32,6 +32,7 @@ mongoose.set('debug', true);
 
 //Passport
 require('./src/config/passport');
+
 //Routes
 app.use(require('./src/routes'));
 
