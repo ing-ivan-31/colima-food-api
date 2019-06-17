@@ -9,21 +9,6 @@ const Mailer = require("../../services/mailer");
 const UserRepository = require('../../Repositories/UserRepository');
 const avatarUpload = require('../../config/multer');
 
-/**
- * Get Full Name
- * @param user
- */
-const getFullName = (user) => {
-    let fullname = {};
-    if (typeof  user.first_name !== 'undefined' && typeof  user.last_name !== 'undefined') {
-        fullname = {full_name: user.first_name + ' ' + user.last_name};
-    }
-    else {
-        fullname = {full_name: 'Usuario'}
-    }
-    return fullname;
-};
-
 const sendResetEmail = (email, token_reset) => {
     let mailer = new Mailer();
     mailer.setEmailOptions({
@@ -200,9 +185,7 @@ router.get('/current', authentication.required, (req, res, next) => {
                 });
             }
 
-            let fullname = getFullName(user);
-            const newUSer = {...user._doc, ...fullname};
-            return res.json( {user: newUSer } );
+            return res.json( { user: user } );
         })
         .catch( error => {
             const status = {status: httpStatus.INTERNAL_SERVER_ERROR};
@@ -225,9 +208,7 @@ router.post('/activate', authentication.optional, (req, res, next) => {
                 });
             }
 
-            let fullname = getFullName(user);
-            const newUSer = {...user._doc, ...fullname};
-            return res.json( {user: newUSer } );
+            return res.json( {user: user } );
         })
         .catch( error => {
             console.log(error);
@@ -251,9 +232,7 @@ router.post('/reset/account', authentication.optional, (req, res, next) => {
                 });
             }
             sendResetEmail(user.email, user.token_reset);
-            let fullname = getFullName(user);
-            const newUSer = {...user._doc, ...fullname};
-            return res.json( {user: newUSer } );
+            return res.json( {user: user } );
         })
         .catch( error => {
             console.log(error);

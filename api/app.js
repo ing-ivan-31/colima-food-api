@@ -8,7 +8,8 @@ let expressPino = require('express-pino-logger');
 let logger = pino({ level: process.env.LOG_LEVEL || 'info' });
 let expressLogger = expressPino({ logger });
 let session = require('express-session');
-let mongoose = require('mongoose');
+// Database
+require('./src/services/database');
 require('dotenv').config();
 
 //server configuration
@@ -23,12 +24,6 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 app.use(express.static('public'));
 app.use(session({ secret: 'colima-food-api', cookie: { maxAge: 60000 }, resave: false, saveUninitialized: false }));
-
-
-//Configure Mongoose to promises and connect to DB.
-mongoose.promise = global.Promise;
-mongoose.connect('mongodb://mongodb:27017/' + process.env.DB_NAME, { useNewUrlParser: true,  useFindAndModify: false } );
-mongoose.set('debug', true);
 
 //Passport
 require('./src/config/passport');
