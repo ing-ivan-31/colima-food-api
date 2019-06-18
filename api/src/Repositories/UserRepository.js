@@ -131,7 +131,6 @@ class UserRepository
         const model = new Users();
         return model.changePassword(token, password);
     }
-
 }
 
 module.exports = new UserRepository ();

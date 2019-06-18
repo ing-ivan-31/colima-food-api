@@ -107,7 +107,7 @@ const sendEmail = (email, token_confirmation) => {
 };
 
 // Accesor
-UsersSchema.virtual('fullName').get(function() {
+UsersSchema.virtual('full_name').get(function() {
     let fullname = 'Usuario';
     if (typeof  this.first_name !== 'undefined' && typeof  this.last_name !== 'undefined') {
         fullname = this.first_name + ' ' + this.last_name;
@@ -141,7 +141,7 @@ UsersSchema.methods.toAuthJSON = function(create) {
         first_name: this.first_name,
         last_name: this.last_name,
         phone_number: this.phone_number,
-        full_name: this.fullName
+        full_name: this.full_name
     };
 };
 

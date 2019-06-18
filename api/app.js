@@ -8,9 +8,10 @@ let expressPino = require('express-pino-logger');
 let logger = pino({ level: process.env.LOG_LEVEL || 'info' });
 let expressLogger = expressPino({ logger });
 let session = require('express-session');
+require('dotenv').config();
+
 // Database
 require('./src/services/database');
-require('dotenv').config();
 
 //server configuration
 const port = process.env.PORT || 6200;
