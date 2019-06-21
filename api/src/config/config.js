@@ -11,15 +11,11 @@
 
     module.exports = (sourcePath, app) => {
         const baseApp = app;
-
         const getPort = () => process.env.PORT || 6200;
+        const getLogger = () => logger;
 
         const configRoutes = () => {
             baseApp.use(express.static('public'));
-
-            baseApp.get('/', (req, res, next) => {
-                res.sendFile(getIndexRoute())
-            });
 
             app.use(bodyParser.urlencoded({
                 extended: true
@@ -29,13 +25,11 @@
             app.use(cors());
             app.use(expressLogger);
 
-            //require('../routes/app')(baseApp);
-
             //Passport
-            require('./src/config/passport');
+            require('./passport');
 
             //Routes
-            app.use(require('./src/routes'));
+            app.use(require('../routes'));
 
             // 404 Handler
             app.use((req, res, next) => {
@@ -59,7 +53,7 @@
 
         const configureConnection = () => {
             // Database
-            require('./src/services/database');
+            require('../services/database');
         };
 
         const init = () => {
@@ -69,6 +63,7 @@
 
         return {
             getPort,
+            getLogger,
             init
         }
     };
