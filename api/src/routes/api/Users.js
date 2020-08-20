@@ -7,21 +7,7 @@ const httpStatus = require('../../constants/httpStatus');
 const basePath = '';
 const Mailer = require("../../services/mailer");
 const UserRepository = require('../../Repositories/UserRepository');
-
-/**
- * Get Full Name
- * @param user
- */
-const getFullName = (user) => {
-    let fullname = {};
-    if (typeof  user.first_name !== 'undefined' && typeof  user.last_name !== 'undefined') {
-        fullname = {full_name: user.first_name + ' ' + user.last_name};
-    }
-    else {
-        fullname = {full_name: 'Usuario'}
-    }
-    return fullname;
-};
+const avatarUpload = require('../../config/multer');
 
 const sendResetEmail = (email, token_reset) => {
     let mailer = new Mailer();
@@ -79,11 +65,16 @@ router.post(basePath, authentication.optional, (req, res) => {
         });
 });
 
-// Update
-router.put(basePath, authentication.required, (req, res) => {
-    const { body: { user } } = req;
 
-    if (!user.id) {
+/**
+ * @route PUT users
+ * @desc Update profile data
+ * @access public
+ */
+router.put(basePath, authentication.required, (req, res) => {
+    const { payload: { id }} = req;
+
+    if (!id) {
         return res.status(httpStatus.UNPROCESSABLE_ENTITY).json({
             errors: {
                 user: 'is required',
@@ -92,16 +83,44 @@ router.put(basePath, authentication.required, (req, res) => {
         });
     }
 
-    UserRepository
-        .update(user.id, user)
-        .then((user) => {
-            return res.json({ user: user })
-        })
-        .catch( error => {
-            const status = {status: httpStatus.INTERNAL_SERVER_ERROR};
-            const objError = {...error, ...status};
-            return res.status(httpStatus.INTERNAL_SERVER_ERROR).json(objError);
-        });
+    avatarUpload( req, res, ( error ) => {
+        const { body } = req;
+
+        if (error) {
+            console.log('errors', error);
+            return res.status(httpStatus.UNPROCESSABLE_ENTITY).json({
+                errors: {
+                    user: 'is required',
+                    status: httpStatus.UNPROCESSABLE_ENTITY,
+                    error: error
+                },
+            });
+        }
+        else {
+
+            let imageLocation = process.env.S3_AVATAR_PROFILE_DEFAULT;
+            let user = {...body};
+
+            // If File not found
+            if (req.file !== undefined) {
+                // If Success
+                imageLocation = req.file.location;
+                user = {...user, avatar: imageLocation};
+            }
+
+            // Save the file name into database into profile model
+            UserRepository
+                .update(id, user)
+                .then((user) => {
+                    return res.json({user: user})
+                })
+                .catch(error => {
+                    const status = {status: httpStatus.INTERNAL_SERVER_ERROR};
+                    const objError = {...error, ...status};
+                    return res.status(httpStatus.INTERNAL_SERVER_ERROR).json(objError);
+                });
+        }
+    });
 });
 
 // Delete
@@ -129,8 +148,7 @@ router.delete(basePath, authentication.required,  (req, res) => {
         });
 });
 
-
-// GEt ALL
+// GET ALL
 router.get(basePath, authentication.required, (req, res, next) => {
 
     UserRepository
@@ -167,9 +185,7 @@ router.get('/current', authentication.required, (req, res, next) => {
                 });
             }
 
-            let fullname = getFullName(user);
-            const newUSer = {...user._doc, ...fullname};
-            return res.json( {user: newUSer } );
+            return res.json( { user: user } );
         })
         .catch( error => {
             const status = {status: httpStatus.INTERNAL_SERVER_ERROR};
@@ -192,9 +208,7 @@ router.post('/activate', authentication.optional, (req, res, next) => {
                 });
             }
 
-            let fullname = getFullName(user);
-            const newUSer = {...user._doc, ...fullname};
-            return res.json( {user: newUSer } );
+            return res.json( {user: user } );
         })
         .catch( error => {
             console.log(error);
@@ -218,9 +232,7 @@ router.post('/reset/account', authentication.optional, (req, res, next) => {
                 });
             }
             sendResetEmail(user.email, user.token_reset);
-            let fullname = getFullName(user);
-            const newUSer = {...user._doc, ...fullname};
-            return res.json( {user: newUSer } );
+            return res.json( {user: user } );
         })
         .catch( error => {
             console.log(error);
@@ -276,7 +288,7 @@ router.post('/reset/password/', authentication.optional, (req, res, next) => {
         });
 });
 
-//Get by Id
+//Get user by Id
 router.get('/:id', authentication.required, (req, res, next) => {
     const { params: { id }  } = req;
 

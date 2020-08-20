@@ -24,15 +24,25 @@ const UsersSchema = new Schema({
     },
     token_confirmation: String,
     token_reset: String,
+    avatar: { type: String, default: process.env.S3_AVATAR_PROFILE_DEFAULT}
+}, { timestamps:true, toObject: { virtuals: true } ,toJSON: { virtuals: true } });
 
-}, { timestamps:true });
-
+/**
+ *
+ * @param password
+ */
 UsersSchema.methods.setPassword = function(password) {
     this.salt = crypto.randomBytes(16).toString('hex');
     this.hash = crypto.pbkdf2Sync(password, this.salt, 10000, 512, 'sha512').toString('hex');
     this.token_confirmation = crypto.randomBytes(16).toString('hex');
 };
 
+/**
+ *
+ * @param token
+ * @param password
+ * @returns {Query|void}
+ */
 UsersSchema.methods.changePassword = function(token, password) {
     let salt = crypto.randomBytes(16).toString('hex');
     let hash = crypto.pbkdf2Sync(password, salt, 10000, 512, 'sha512').toString('hex');
@@ -51,11 +61,20 @@ UsersSchema.methods.changePassword = function(token, password) {
         });
 };
 
+/**
+ *
+ * @param password
+ * @returns {boolean}
+ */
 UsersSchema.methods.validatePassword = function(password) {
     const hash = crypto.pbkdf2Sync(password, this.salt, 10000, 512, 'sha512').toString('hex');
     return this.hash === hash;
 };
 
+/**
+ *
+ * @returns {*}
+ */
 UsersSchema.methods.generateJWT = function() {
     const today = new Date();
     const expirationDate = new Date(today);
@@ -69,6 +88,11 @@ UsersSchema.methods.generateJWT = function() {
     }, process.env.JWT_SECRET);
 };
 
+/**
+ *
+ * @param email
+ * @param token_confirmation
+ */
 const sendEmail = (email, token_confirmation) => {
     let mailer = new Mailer();
     mailer.setEmailOptions({
@@ -82,12 +106,30 @@ const sendEmail = (email, token_confirmation) => {
     mailer.send();
 };
 
-UsersSchema.methods.toAuthJSON = function(create) {
+// Accesor
+UsersSchema.virtual('full_name').get(function() {
     let fullname = 'Usuario';
     if (typeof  this.first_name !== 'undefined' && typeof  this.last_name !== 'undefined') {
         fullname = this.first_name + ' ' + this.last_name;
     }
 
+    return fullname;
+});
+
+//Mutator
+/*userSchema.virtual('fullName').set(function(name) {
+    let str = name.split(' ');
+
+    this.firstName = str[0];
+    this.lastName = str[1];
+})*/
+
+/**
+ *
+ * @param create
+ * @returns {{full_name: *, last_name: *, phone_number: *, _id: *, first_name: *, email: *, token: *}}
+ */
+UsersSchema.methods.toAuthJSON = function(create) {
     if (create) {
         sendEmail(this.email, this.token_confirmation);
     }
@@ -99,9 +141,8 @@ UsersSchema.methods.toAuthJSON = function(create) {
         first_name: this.first_name,
         last_name: this.last_name,
         phone_number: this.phone_number,
-        full_name: fullname
+        full_name: this.full_name
     };
 };
 
 module.exports = mongoose.model('Users', UsersSchema);
-
